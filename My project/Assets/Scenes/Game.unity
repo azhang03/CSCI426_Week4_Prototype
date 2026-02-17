@@ -836,6 +836,59 @@ Transform:
   m_CorrespondingSourceObject: {fileID: 3347543616739314970, guid: d16432bc131ab054ca5708ca89421b5b, type: 3}
   m_PrefabInstance: {fileID: 1637302126}
   m_PrefabAsset: {fileID: 0}
+--- !u!1 &176550497
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 176550499}
+  - component: {fileID: 176550498}
+  m_Layer: 0
+  m_Name: ExposureMeter
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!114 &176550498
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 176550497}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: e88c6ccefded22446a5ef7ee1eee9d3b, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::Minifantasy.ExposureMeter
+  gainRate: 0.15
+  gainIncreasePerGlasses: 0
+  decayRate: 0.05
+  visibilityBuffer: 0.35
+  stackMultiplier: 1
+  barSize: {x: 250, y: 16}
+  bottomMargin: 80
+  safeColor: {r: 0.2, g: 0.75, b: 0.3, a: 1}
+  dangerColor: {r: 0.95, g: 0.1, b: 0.1, a: 1}
+--- !u!4 &176550499
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 176550497}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: -2.65775, y: 4.48029, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 0}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!4 &198894174 stripped
 Transform:
   m_CorrespondingSourceObject: {fileID: 3347543616739314970, guid: d16432bc131ab054ca5708ca89421b5b, type: 3}
@@ -3481,11 +3534,17 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::Minifantasy.GameManager
   totalGlasses: 5
-  baseSpawnInterval: 10
-  minSpawnInterval: 3
-  escapeTime: 3
-  rendermanRadius: 3
-  rendermanPrefab: {fileID: 0}
+  baseLifetime: 10
+  minLifetime: 4
+  respawnDelay: 0.5
+  minSpawnDistance: 3
+  maxSpawnDistance: 6
+  tailoredHalfAngle: 22.5
+  mapMinX: -16
+  mapMaxX: 14
+  mapMinY: -10
+  mapMaxY: 20
+  rendermanPrefab: {fileID: 3244546069534609162, guid: 1ea94873ca8be5640809c650f0fa4129, type: 3}
   vignetteController: {fileID: 441275038}
   glassesText: {fileID: 0}
   winPanel: {fileID: 0}
@@ -25016,6 +25075,8 @@ GameObject:
   - component: {fileID: 1769870792}
   - component: {fileID: 1769870791}
   - component: {fileID: 1769870795}
+  - component: {fileID: 1769870797}
+  - component: {fileID: 1769870796}
   m_Layer: 0
   m_Name: Player
   m_TagString: Player
@@ -25136,7 +25197,7 @@ SpriteRenderer:
   m_SortingLayer: 0
   m_SortingOrder: 2
   m_MaskInteraction: 0
-  m_Sprite: {fileID: 7482667652216324306, guid: 311925a002f4447b3a28927169b83ea6, type: 3}
+  m_Sprite: {fileID: 0}
   m_Color: {r: 1, g: 1, b: 1, a: 1}
   m_FlipX: 0
   m_FlipY: 0
@@ -25144,7 +25205,7 @@ SpriteRenderer:
   m_Size: {x: 1, y: 1}
   m_AdaptiveModeThreshold: 0.5
   m_SpriteTileMode: 0
-  m_WasSpriteAssigned: 1
+  m_WasSpriteAssigned: 0
   m_SpriteSortPoint: 0
 --- !u!4 &1769870794
 Transform:
@@ -25176,12 +25237,49 @@ MonoBehaviour:
   walkSpeed: 1
   sprintSpeed: 2
   normalizeDiagonal: 1
-  maxStamina: 100
-  staminaRegenDelay: 0
+  maxStamina: 50
+  staminaRegenDelay: 0.1
   drainRateMin: 20
   drainRateMax: 50
   regenRateMin: 5
   regenRateMax: 25
+--- !u!114 &1769870796
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1769870790}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: e75706b3223289f48ab04ab1001a3332, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::Minifantasy.PlayerAnimator
+  idleState: Monk_Idle_Red
+  runState: Monk_Run_Red
+  healState: Monk_Heal_Red
+--- !u!95 &1769870797
+Animator:
+  serializedVersion: 7
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1769870790}
+  m_Enabled: 1
+  m_Avatar: {fileID: 0}
+  m_Controller: {fileID: 9100000, guid: 89982da2b368f41848074f38ca2f2e0a, type: 2}
+  m_CullingMode: 0
+  m_UpdateMode: 0
+  m_ApplyRootMotion: 0
+  m_LinearVelocityBlending: 0
+  m_StabilizeFeet: 0
+  m_AnimatePhysics: 0
+  m_WarningMessage: 
+  m_HasTransformHierarchy: 1
+  m_AllowConstantClipSamplingOptimization: 1
+  m_KeepAnimatorStateOnDisable: 0
+  m_WriteDefaultValuesOnDisable: 0
 --- !u!1 &1785326233
 GameObject:
   m_ObjectHideFlags: 0
@@ -26738,11 +26836,11 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 4435855688706169639, guid: ca05d51232bd4d74b96002685387b18f, type: 3}
       propertyPath: m_LocalPosition.x
-      value: -0.19
+      value: -0.38
       objectReference: {fileID: 0}
     - target: {fileID: 4435855688706169639, guid: ca05d51232bd4d74b96002685387b18f, type: 3}
       propertyPath: m_LocalPosition.y
-      value: -19.52
+      value: -18.27
       objectReference: {fileID: 0}
     - target: {fileID: 4435855688706169639, guid: ca05d51232bd4d74b96002685387b18f, type: 3}
       propertyPath: m_LocalPosition.z
@@ -27463,3 +27561,4 @@ SceneRoots:
   - {fileID: 743248480}
   - {fileID: 116416264}
   - {fileID: 228340907}
+  - {fileID: 176550499}

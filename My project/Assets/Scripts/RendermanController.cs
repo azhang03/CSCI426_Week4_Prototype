@@ -1,52 +1,126 @@
 using UnityEngine;
+using System.Collections.Generic;
 
 namespace Minifantasy
 {
     /// <summary>
-    /// Renderman spawns at a position and stays still.
-    /// If the player is inside its AoE for too long, the player loses.
-    /// A visual circle shows the danger zone, and a timer counts down.
+    /// A Renderman instance. Fades in, lingers for its lifetime, then fades out and self-destructs.
+    /// Other scripts query ActiveInstances and IsVisibleToPlayer() to drive the exposure meter.
+    /// Assign renderman.png on the prefab's SpriteRenderer or via the rendermanSprite field.
     /// </summary>
     public class RendermanController : MonoBehaviour
     {
         [Header("Visuals")]
-        [SerializeField] private Color dangerColor = new Color(0.6f, 0f, 0f, 0.3f);
-        [SerializeField] private Color warningColor = new Color(1f, 0f, 0f, 0.5f);
-        [SerializeField] private float fadeInDuration = 0.5f;
-        [SerializeField] private float lingerAfterSafe = 1.5f;
+        [Tooltip("Optional override sprite. If null, uses the existing SpriteRenderer sprite.")]
+        [SerializeField] private Sprite rendermanSprite;
+        [SerializeField] private float fadeInDuration = 0.6f;
+        [SerializeField] private float fadeOutDuration = 1.0f;
+        [SerializeField] private int sortingOrder = 5;
 
-        private float radius;
-        private float escapeTime;
-        private float playerInsideTimer;
-        private bool playerInside;
-        private float aliveTimer;
-        private float maxAliveTime;
-        private bool triggered;
-        private SpriteRenderer aoeRenderer;
-        private SpriteRenderer coreRenderer;
-        private Transform playerTransform;
+        [Header("Lifetime")]
+        [Tooltip("Seconds Renderman stays fully visible before fading out.")]
+        [SerializeField] private float lifetime = 10f;
+
+        private SpriteRenderer sr;
+        private Collider2D shapeCollider;
+        private float age;
+        private bool fading;
+
+        /* -------- static registry -------- */
+
+        private static readonly List<RendermanController> instances = new List<RendermanController>();
+        public static IReadOnlyList<RendermanController> ActiveInstances => instances;
+
+        [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.SubsystemRegistration)]
+        private static void ResetStatics() => instances.Clear();
+
+        /* -------- public API -------- */
+
+        /// <summary>Called by GameManager to set lifetime equal to the current spawn interval.</summary>
+        public void SetLifetime(float duration) { lifetime = duration; }
+
+        /// <summary>
+        /// True when any part of the Renderman sprite overlaps the player's vision circle.
+        /// Uses a PolygonCollider2D fitted to the sprite outline for pixel-accurate checks.
+        /// Falls back to the bounding box if no collider is available.
+        /// </summary>
+        public bool IsVisibleToPlayer(Vector2 playerPos, float visionRadius)
+        {
+            if (sr == null || !sr.enabled || sr.color.a < 0.05f)
+                return false;
+
+            Vector2 closest;
+            if (shapeCollider != null)
+                closest = shapeCollider.ClosestPoint(playerPos);
+            else
+                closest = sr.bounds.ClosestPoint(playerPos);
+
+            return Vector2.Distance(closest, playerPos) <= visionRadius;
+        }
+
+        /// <summary>
+        /// True when any part of the sprite overlaps the camera's viewport rectangle.
+        /// Prevents exposure from ticking when Renderman is within the vignette circle
+        /// but off the edge of the screen.
+        /// </summary>
+        public bool IsOnScreen()
+        {
+            Camera cam = Camera.main;
+            if (cam == null || sr == null) return false;
+
+            Vector3 camPos = cam.transform.position;
+            float camH = cam.orthographicSize;
+            float camW = camH * cam.aspect;
+
+            Bounds b = sr.bounds;
+            return b.max.x >= camPos.x - camW && b.min.x <= camPos.x + camW
+                && b.max.y >= camPos.y - camH && b.min.y <= camPos.y + camH;
+        }
+
+        /* -------- lifecycle -------- */
+
+        private void OnEnable()  => instances.Add(this);
+        private void OnDisable() => instances.Remove(this);
 
         private void Start()
         {
-            if (GameManager.Instance != null)
+            sr = GetComponent<SpriteRenderer>();
+            if (sr == null)
+                sr = gameObject.AddComponent<SpriteRenderer>();
+
+            if (rendermanSprite != null)
+                sr.sprite = rendermanSprite;
+
+            sr.sortingOrder = sortingOrder;
+            sr.color = new Color(1f, 1f, 1f, 0f);
+
+            BuildShapeCollider();
+        }
+
+        /// <summary>
+        /// Auto-generates a PolygonCollider2D from the sprite's physics shape
+        /// so the visibility check traces the actual pixel outline, not the bounding box.
+        /// </summary>
+        private void BuildShapeCollider()
+        {
+            if (sr == null || sr.sprite == null) return;
+
+            int shapeCount = sr.sprite.GetPhysicsShapeCount();
+            if (shapeCount <= 0) return;
+
+            PolygonCollider2D poly = gameObject.AddComponent<PolygonCollider2D>();
+            poly.isTrigger = true;
+            poly.pathCount = shapeCount;
+
+            List<Vector2> path = new List<Vector2>();
+            for (int i = 0; i < shapeCount; i++)
             {
-                radius = GameManager.Instance.RendermanRadius;
-                escapeTime = GameManager.Instance.EscapeTime;
-            }
-            else
-            {
-                radius = 3f;
-                escapeTime = 3f;
+                path.Clear();
+                sr.sprite.GetPhysicsShape(i, path);
+                poly.SetPath(i, path);
             }
 
-            maxAliveTime = escapeTime + lingerAfterSafe + 2f;
-            playerInsideTimer = 0f;
-
-            GameObject player = GameObject.FindGameObjectWithTag("Player");
-            if (player != null)
-                playerTransform = player.transform;
-
-            CreateVisuals();
+            shapeCollider = poly;
         }
 
         private void Update()
@@ -54,116 +128,33 @@ namespace Minifantasy
             if (GameManager.Instance != null && GameManager.Instance.IsGameOver)
                 return;
 
-            aliveTimer += Time.deltaTime;
+            age += Time.deltaTime;
 
-            if (playerTransform == null) return;
-
-            float dist = Vector2.Distance(transform.position, playerTransform.position);
-            playerInside = dist <= radius;
-
-            if (playerInside)
+            if (!fading)
             {
-                playerInsideTimer += Time.deltaTime;
-
-                // Flash warning as time runs out
-                float urgency = playerInsideTimer / escapeTime;
-                Color c = Color.Lerp(dangerColor, warningColor, urgency);
-                if (aoeRenderer != null)
-                    aoeRenderer.color = c;
-
-                if (playerInsideTimer >= escapeTime)
+                if (age < fadeInDuration)
                 {
-                    if (GameManager.Instance != null)
-                        GameManager.Instance.Lose();
+                    float alpha = Mathf.Clamp01(age / fadeInDuration);
+                    sr.color = new Color(1f, 1f, 1f, alpha);
                 }
-            }
-            else
-            {
-                // Player escaped - start fade and destroy
-                if (playerInsideTimer > 0f || aliveTimer > maxAliveTime)
+                else if (age >= lifetime)
                 {
-                    FadeAndDestroy();
+                    fading = true;
                 }
-            }
-        }
-
-        private void CreateVisuals()
-        {
-            // AoE circle
-            GameObject aoeObj = new GameObject("AoE_Circle");
-            aoeObj.transform.SetParent(transform);
-            aoeObj.transform.localPosition = Vector3.zero;
-
-            aoeRenderer = aoeObj.AddComponent<SpriteRenderer>();
-            aoeRenderer.sprite = CreateCircleSprite(64);
-            aoeRenderer.color = dangerColor;
-            aoeRenderer.sortingOrder = 1;
-            aoeObj.transform.localScale = Vector3.one * radius * 2f;
-
-            // Core "Renderman" sprite (simple dark square for now)
-            GameObject coreObj = new GameObject("Renderman_Core");
-            coreObj.transform.SetParent(transform);
-            coreObj.transform.localPosition = Vector3.zero;
-
-            coreRenderer = coreObj.AddComponent<SpriteRenderer>();
-            coreRenderer.sprite = CreateSquareSprite();
-            coreRenderer.color = new Color(0.15f, 0f, 0.15f, 0.9f);
-            coreRenderer.sortingOrder = 2;
-            coreObj.transform.localScale = Vector3.one * 0.8f;
-        }
-
-        private void FadeAndDestroy()
-        {
-            if (aoeRenderer != null)
-            {
-                Color c = aoeRenderer.color;
-                c.a -= Time.deltaTime * 2f;
-                aoeRenderer.color = c;
-            }
-
-            if (coreRenderer != null)
-            {
-                Color c = coreRenderer.color;
-                c.a -= Time.deltaTime * 2f;
-                coreRenderer.color = c;
-            }
-
-            if (aoeRenderer != null && aoeRenderer.color.a <= 0f)
-                Destroy(gameObject);
-        }
-
-        private static Sprite CreateCircleSprite(int resolution)
-        {
-            Texture2D tex = new Texture2D(resolution, resolution, TextureFormat.RGBA32, false);
-            float center = resolution / 2f;
-            float radiusPx = center - 1f;
-
-            for (int y = 0; y < resolution; y++)
-            {
-                for (int x = 0; x < resolution; x++)
+                else
                 {
-                    float dist = Vector2.Distance(new Vector2(x, y), new Vector2(center, center));
-                    if (dist <= radiusPx)
-                        tex.SetPixel(x, y, Color.white);
-                    else
-                        tex.SetPixel(x, y, Color.clear);
+                    sr.color = Color.white;
                 }
             }
 
-            tex.Apply();
-            return Sprite.Create(tex, new Rect(0, 0, resolution, resolution),
-                new Vector2(0.5f, 0.5f), resolution);
-        }
-
-        private static Sprite CreateSquareSprite()
-        {
-            Texture2D tex = new Texture2D(4, 4, TextureFormat.RGBA32, false);
-            tex.filterMode = FilterMode.Point;
-            for (int y = 0; y < 4; y++)
-                for (int x = 0; x < 4; x++)
-                    tex.SetPixel(x, y, Color.white);
-            tex.Apply();
-            return Sprite.Create(tex, new Rect(0, 0, 4, 4), new Vector2(0.5f, 0.5f), 4);
+            if (fading)
+            {
+                Color c = sr.color;
+                c.a -= Time.deltaTime / fadeOutDuration;
+                sr.color = c;
+                if (c.a <= 0f)
+                    Destroy(gameObject);
+            }
         }
     }
 }

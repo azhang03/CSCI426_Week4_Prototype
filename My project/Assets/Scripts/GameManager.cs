@@ -1,5 +1,6 @@
 using UnityEngine;
 using UnityEngine.SceneManagement;
+using UnityEngine.InputSystem;
 using TMPro;
 
 namespace Minifantasy
@@ -10,17 +11,29 @@ namespace Minifantasy
 
         [Header("Glasses Settings")]
         [Tooltip("Total glasses needed to win.")]
-        [SerializeField] private int totalGlasses = 4;
+        [SerializeField] private int totalGlasses = 5;
 
-        [Header("Renderman Spawn Timing")]
-        [Tooltip("Base interval (seconds) between Renderman spawns at 0 glasses.")]
-        [SerializeField] private float baseSpawnInterval = 10f;
-        [Tooltip("Minimum interval (seconds) at max glasses collected.")]
-        [SerializeField] private float minSpawnInterval = 3f;
-        [Tooltip("How many seconds the player has to leave Renderman's AoE.")]
-        [SerializeField] private float escapeTime = 3f;
-        [Tooltip("Radius of Renderman's danger zone.")]
-        [SerializeField] private float rendermanRadius = 3f;
+        [Header("Renderman Timing")]
+        [Tooltip("Renderman lifetime (and first-spawn delay) at 0 glasses.")]
+        [SerializeField] private float baseLifetime = 10f;
+        [Tooltip("Renderman lifetime at max glasses collected.")]
+        [SerializeField] private float minLifetime = 3f;
+        [Tooltip("Seconds between one Renderman despawning and the next spawning.")]
+        [SerializeField] private float respawnDelay = 0.5f;
+
+        [Header("Renderman Spawn Positioning")]
+        [Tooltip("Minimum spawn distance from the player.")]
+        [SerializeField] private float minSpawnDistance = 5f;
+        [Tooltip("Maximum spawn distance from the player.")]
+        [SerializeField] private float maxSpawnDistance = 8f;
+        [Tooltip("Half-angle (degrees) of the cone for tailored spawns. 22.5 = 45° total cone.")]
+        [SerializeField] private float tailoredHalfAngle = 22.5f;
+
+        [Header("Map Bounds (must match CameraController)")]
+        [SerializeField] private float mapMinX = -16f;
+        [SerializeField] private float mapMaxX = 14f;
+        [SerializeField] private float mapMinY = -10f;
+        [SerializeField] private float mapMaxY = 20f;
 
         [Header("References")]
         [SerializeField] private GameObject rendermanPrefab;
@@ -31,12 +44,17 @@ namespace Minifantasy
 
         private int glassesCollected = 0;
         private float spawnTimer;
-        private bool gameOver = false;
+        private float respawnTimer;
+        private bool firstSpawnDone;
+        private int spawnCount;
+        private bool gameOver;
+
+        private Transform playerTransform;
+        private Vector2 lastMoveDir = Vector2.up;
+        private Vector3 prevPlayerPos;
 
         public int GlassesCollected => glassesCollected;
         public int TotalGlasses => totalGlasses;
-        public float EscapeTime => escapeTime;
-        public float RendermanRadius => rendermanRadius;
         public bool IsGameOver => gameOver;
 
         private void Awake()
@@ -51,7 +69,7 @@ namespace Minifantasy
 
         private void Start()
         {
-            spawnTimer = baseSpawnInterval;
+            spawnTimer = baseLifetime;
             UpdateUI();
 
             if (vignetteController == null)
@@ -59,26 +77,146 @@ namespace Minifantasy
 
             if (winPanel != null) winPanel.SetActive(false);
             if (losePanel != null) losePanel.SetActive(false);
+
+            FindPlayer();
+
+            float startRadius = vignetteController != null
+                ? vignetteController.GetCurrentVisibleRadius() : 0f;
+            Debug.Log($"[Game] Start — visible radius: {startRadius:F2}");
         }
 
         private void Update()
         {
+            HandleDebugKeys();
+
             if (gameOver) return;
 
-            spawnTimer -= Time.deltaTime;
-            if (spawnTimer <= 0f)
+            TrackPlayerDirection();
+
+            if (!firstSpawnDone)
             {
-                SpawnRenderman();
-                spawnTimer = GetCurrentSpawnInterval();
+                // Initial delay before the very first Renderman appears
+                spawnTimer -= Time.deltaTime;
+                if (spawnTimer <= 0f)
+                {
+                    SpawnRenderman();
+                    firstSpawnDone = true;
+                }
+            }
+            else if (RendermanController.ActiveInstances.Count == 0)
+            {
+                // Previous Renderman despawned — wait a beat, then spawn the next
+                respawnTimer += Time.deltaTime;
+                if (respawnTimer >= respawnDelay)
+                {
+                    SpawnRenderman();
+                    respawnTimer = 0f;
+                }
+            }
+            else
+            {
+                respawnTimer = 0f;
             }
         }
 
-        public float GetCurrentSpawnInterval()
+        /* ---------- debug ---------- */
+
+        private void HandleDebugKeys()
         {
-            // Positive feedback loop: more glasses -> shorter interval -> more danger
-            float t = (float)glassesCollected / Mathf.Max(totalGlasses, 1);
-            return Mathf.Lerp(baseSpawnInterval, minSpawnInterval, t);
+            if (Keyboard.current == null) return;
+
+            // R = full restart (reload scene as if pressing Play)
+            if (Keyboard.current.rKey.wasPressedThisFrame)
+                RestartGame();
+
+            // 1 = give one pair of glasses
+            if (Keyboard.current.digit1Key.wasPressedThisFrame && !gameOver)
+                CollectGlasses();
         }
+
+        /* ---------- player tracking ---------- */
+
+        private void FindPlayer()
+        {
+            if (playerTransform != null) return;
+
+            GameObject p = GameObject.FindGameObjectWithTag("Player");
+            if (p != null)
+            {
+                playerTransform = p.transform;
+                prevPlayerPos = playerTransform.position;
+            }
+        }
+
+        private void TrackPlayerDirection()
+        {
+            if (playerTransform == null) { FindPlayer(); return; }
+
+            Vector2 delta = (Vector2)(playerTransform.position - prevPlayerPos);
+            if (delta.sqrMagnitude > 0.0001f)
+                lastMoveDir = delta.normalized;
+            prevPlayerPos = playerTransform.position;
+        }
+
+        /* ---------- spawning ---------- */
+
+        public float GetCurrentLifetime()
+        {
+            float t = (float)glassesCollected / Mathf.Max(totalGlasses, 1);
+            return Mathf.Lerp(baseLifetime, minLifetime, t);
+        }
+
+        private void SpawnRenderman()
+        {
+            if (rendermanPrefab == null || playerTransform == null) return;
+
+            bool tailored = (spawnCount % 2 == 0);
+            const int maxAttempts = 20;
+            Vector3 spawnPos = playerTransform.position;
+
+            for (int attempt = 0; attempt < maxAttempts; attempt++)
+            {
+                float angleDeg;
+                if (tailored)
+                {
+                    float baseAngle = Mathf.Atan2(lastMoveDir.y, lastMoveDir.x) * Mathf.Rad2Deg;
+                    angleDeg = baseAngle + Random.Range(-tailoredHalfAngle, tailoredHalfAngle);
+                }
+                else
+                {
+                    angleDeg = Random.Range(0f, 360f);
+                }
+
+                float angleRad = angleDeg * Mathf.Deg2Rad;
+                float dist = Random.Range(minSpawnDistance, maxSpawnDistance);
+                Vector2 offset = new Vector2(Mathf.Cos(angleRad), Mathf.Sin(angleRad)) * dist;
+                spawnPos = playerTransform.position + (Vector3)offset;
+
+                if (IsInsideMap(spawnPos))
+                    break;
+            }
+
+            // Final safety clamp in case all attempts landed out of bounds
+            spawnPos.x = Mathf.Clamp(spawnPos.x, mapMinX, mapMaxX);
+            spawnPos.y = Mathf.Clamp(spawnPos.y, mapMinY, mapMaxY);
+
+            float spawnDist = Vector2.Distance(playerTransform.position, spawnPos);
+            Debug.Log($"[Renderman] Spawn #{spawnCount + 1} ({(tailored ? "tailored" : "random")}) — distance: {spawnDist:F2}, lifetime: {GetCurrentLifetime():F2}s");
+
+            GameObject rm = Instantiate(rendermanPrefab, spawnPos, Quaternion.identity);
+            RendermanController rmc = rm.GetComponent<RendermanController>();
+            if (rmc != null)
+                rmc.SetLifetime(GetCurrentLifetime());
+            spawnCount++;
+        }
+
+        private bool IsInsideMap(Vector3 pos)
+        {
+            return pos.x >= mapMinX && pos.x <= mapMaxX
+                && pos.y >= mapMinY && pos.y <= mapMaxY;
+        }
+
+        /* ---------- game flow ---------- */
 
         public void CollectGlasses()
         {
@@ -90,32 +228,19 @@ namespace Minifantasy
             if (vignetteController != null)
                 vignetteController.OnGlassesCollected(glassesCollected, totalGlasses);
 
-            // Reset spawn timer to give a brief breather after pickup
-            spawnTimer = GetCurrentSpawnInterval();
+            float newRadius = vignetteController != null
+                ? vignetteController.GetCurrentVisibleRadius() : 0f;
+            Debug.Log($"[Game] Glasses {glassesCollected}/{totalGlasses} — visible radius: {newRadius:F2}");
+
+            // Play heal animation on the player
+            if (playerTransform != null)
+            {
+                PlayerAnimator pa = playerTransform.GetComponent<PlayerAnimator>();
+                if (pa != null) pa.PlayHeal();
+            }
 
             if (glassesCollected >= totalGlasses)
                 Win();
-        }
-
-        private void SpawnRenderman()
-        {
-            if (rendermanPrefab == null) return;
-
-            GameObject player = GameObject.FindGameObjectWithTag("Player");
-            if (player == null) return;
-
-            // Spawn Renderman at a random offset near the player (within visible area)
-            float vignetteRadius = vignetteController != null
-                ? vignetteController.GetCurrentVisibleRadius()
-                : 4f;
-
-            // Spawn within the player's visible area so they see it coming
-            float spawnDist = Random.Range(1f, Mathf.Max(vignetteRadius * 0.7f, 2f));
-            float angle = Random.Range(0f, 360f) * Mathf.Deg2Rad;
-            Vector2 offset = new Vector2(Mathf.Cos(angle), Mathf.Sin(angle)) * spawnDist;
-            Vector3 spawnPos = player.transform.position + (Vector3)offset;
-
-            Instantiate(rendermanPrefab, spawnPos, Quaternion.identity);
         }
 
         public void Lose()
