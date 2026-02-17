@@ -27,11 +27,12 @@ namespace Minifantasy
         private GameObject vignetteObj;
         private int texSize = 1024;
         private bool isEnabled = true;
+        private float lastCoverWorldSize;
+        private bool needsInitialRebuild;
 
         private void Start()
         {
             currentRadius = startRadius;
-            Debug.Log($"[Vignette] Start — startRadius={startRadius}, growthPerGlasses={growthPerGlasses}, currentRadius={currentRadius}");
             FindPlayer();
             if (playerTransform != null)
                 CreateVignette();
@@ -48,13 +49,32 @@ namespace Minifantasy
             }
 
             UpdateScale();
+
+            if (needsInitialRebuild)
+            {
+                needsInitialRebuild = false;
+                RebuildTexture();
+            }
+            else
+            {
+                float coverWorldSize = GetCoverWorldSize();
+                if (Mathf.Abs(coverWorldSize - lastCoverWorldSize) > 0.1f)
+                    RebuildTexture();
+            }
+        }
+
+        private float GetCoverWorldSize()
+        {
+            Camera cam = Camera.main;
+            if (cam == null) return 106f;
+            float camHeight = cam.orthographicSize * 2f;
+            float camWidth = camHeight * cam.aspect;
+            return Mathf.Max(camHeight, camWidth) * 6f;
         }
 
         public void OnGlassesCollected(int collected, int total)
         {
-            float oldRadius = currentRadius;
             currentRadius = startRadius * Mathf.Pow(growthPerGlasses, collected);
-            Debug.Log($"[Vignette] Glasses {collected}/{total} — radius {oldRadius:F3} → {currentRadius:F3} (startRadius={startRadius}, growth={growthPerGlasses})");
             RebuildTexture();
         }
 
@@ -100,8 +120,7 @@ namespace Minifantasy
             spriteRenderer.sortingOrder = sortingOrder;
             spriteRenderer.enabled = isEnabled;
 
-            RebuildTexture();
-            UpdateScale();
+            needsInitialRebuild = true;
         }
 
         private void UpdateScale()
@@ -124,15 +143,12 @@ namespace Minifantasy
                 vignetteTexture.wrapMode = TextureWrapMode.Clamp;
             }
 
-            Camera cam = Camera.main;
-            float camHeight = cam != null ? cam.orthographicSize * 2f : 10f;
-            float camWidth = cam != null ? camHeight * cam.aspect : 17.78f;
-            float coverWorldSize = Mathf.Max(camHeight, camWidth) * 6f;
+            float coverWorldSize = GetCoverWorldSize();
+            lastCoverWorldSize = coverWorldSize;
 
             float center = texSize / 2f;
             float innerRadPx = (currentRadius / coverWorldSize) * texSize;
             float edgeSoftness = Mathf.Max(texSize * 0.01f, innerRadPx * 0.3f);
-            Debug.Log($"[Vignette] RebuildTexture — currentRadius={currentRadius:F3}, coverWorldSize={coverWorldSize:F1}, innerRadPx={innerRadPx:F1}, edgeSoftness={edgeSoftness:F1}, texSize={texSize}");
 
             for (int y = 0; y < texSize; y++)
             {

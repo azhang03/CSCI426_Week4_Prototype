@@ -1027,7 +1027,6 @@ Transform:
   m_ConstrainProportionsScale: 0
   m_Children:
   - {fileID: 441275037}
-  - {fileID: 1300006857}
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!4 &233058920 stripped
@@ -1905,11 +1904,11 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 4479235377703423165, guid: d16432bc131ab054ca5708ca89421b5b, type: 3}
       propertyPath: m_LocalPosition.x
-      value: -0.53
+      value: -0.86
       objectReference: {fileID: 0}
     - target: {fileID: 4479235377703423165, guid: d16432bc131ab054ca5708ca89421b5b, type: 3}
       propertyPath: m_LocalPosition.y
-      value: -10.64
+      value: -10.27
       objectReference: {fileID: 0}
     - target: {fileID: 7724026711007126765, guid: d16432bc131ab054ca5708ca89421b5b, type: 3}
       propertyPath: m_Sprite
@@ -2127,8 +2126,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 5cab32cb6ac9c684f95e24fa3b0e8132, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::Minifantasy.VignetteController
-  startRadius: 10
-  areaPerGlasses: 1
+  startRadius: 3
+  growthPerGlasses: 1.35
   sortingOrder: 1000
 --- !u!1001 &454553513
 PrefabInstance:
@@ -3486,7 +3485,7 @@ MonoBehaviour:
   minSpawnInterval: 3
   escapeTime: 3
   rendermanRadius: 3
-  rendermanPrefab: {fileID: 3244546069534609162, guid: 1ea94873ca8be5640809c650f0fa4129, type: 3}
+  rendermanPrefab: {fileID: 0}
   vignetteController: {fileID: 441275038}
   glassesText: {fileID: 0}
   winPanel: {fileID: 0}
@@ -8855,11 +8854,6 @@ PrefabInstance:
     m_AddedGameObjects: []
     m_AddedComponents: []
   m_SourcePrefab: {fileID: 100100000, guid: d16432bc131ab054ca5708ca89421b5b, type: 3}
---- !u!4 &1300006857 stripped
-Transform:
-  m_CorrespondingSourceObject: {fileID: 3579652168267411309, guid: 1ea94873ca8be5640809c650f0fa4129, type: 3}
-  m_PrefabInstance: {fileID: 1635776872156105557}
-  m_PrefabAsset: {fileID: 0}
 --- !u!1001 &1311613350
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -25183,7 +25177,7 @@ MonoBehaviour:
   sprintSpeed: 2
   normalizeDiagonal: 1
   maxStamina: 100
-  staminaRegenDelay: 0.8
+  staminaRegenDelay: 0
   drainRateMin: 20
   drainRateMax: 50
   regenRateMin: 5
@@ -27391,63 +27385,6 @@ Transform:
   - {fileID: 1313291683}
   m_Father: {fileID: 759323559}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
---- !u!1001 &1635776872156105557
-PrefabInstance:
-  m_ObjectHideFlags: 0
-  serializedVersion: 2
-  m_Modification:
-    serializedVersion: 3
-    m_TransformParent: {fileID: 228340907}
-    m_Modifications:
-    - target: {fileID: 3244546069534609162, guid: 1ea94873ca8be5640809c650f0fa4129, type: 3}
-      propertyPath: m_Name
-      value: RendermanController
-      objectReference: {fileID: 0}
-    - target: {fileID: 3579652168267411309, guid: 1ea94873ca8be5640809c650f0fa4129, type: 3}
-      propertyPath: m_LocalPosition.x
-      value: 3.19321
-      objectReference: {fileID: 0}
-    - target: {fileID: 3579652168267411309, guid: 1ea94873ca8be5640809c650f0fa4129, type: 3}
-      propertyPath: m_LocalPosition.y
-      value: 1.8720002
-      objectReference: {fileID: 0}
-    - target: {fileID: 3579652168267411309, guid: 1ea94873ca8be5640809c650f0fa4129, type: 3}
-      propertyPath: m_LocalPosition.z
-      value: 0
-      objectReference: {fileID: 0}
-    - target: {fileID: 3579652168267411309, guid: 1ea94873ca8be5640809c650f0fa4129, type: 3}
-      propertyPath: m_LocalRotation.w
-      value: 1
-      objectReference: {fileID: 0}
-    - target: {fileID: 3579652168267411309, guid: 1ea94873ca8be5640809c650f0fa4129, type: 3}
-      propertyPath: m_LocalRotation.x
-      value: -0
-      objectReference: {fileID: 0}
-    - target: {fileID: 3579652168267411309, guid: 1ea94873ca8be5640809c650f0fa4129, type: 3}
-      propertyPath: m_LocalRotation.y
-      value: -0
-      objectReference: {fileID: 0}
-    - target: {fileID: 3579652168267411309, guid: 1ea94873ca8be5640809c650f0fa4129, type: 3}
-      propertyPath: m_LocalRotation.z
-      value: -0
-      objectReference: {fileID: 0}
-    - target: {fileID: 3579652168267411309, guid: 1ea94873ca8be5640809c650f0fa4129, type: 3}
-      propertyPath: m_LocalEulerAnglesHint.x
-      value: 0
-      objectReference: {fileID: 0}
-    - target: {fileID: 3579652168267411309, guid: 1ea94873ca8be5640809c650f0fa4129, type: 3}
-      propertyPath: m_LocalEulerAnglesHint.y
-      value: 0
-      objectReference: {fileID: 0}
-    - target: {fileID: 3579652168267411309, guid: 1ea94873ca8be5640809c650f0fa4129, type: 3}
-      propertyPath: m_LocalEulerAnglesHint.z
-      value: 0
-      objectReference: {fileID: 0}
-    m_RemovedComponents: []
-    m_RemovedGameObjects: []
-    m_AddedGameObjects: []
-    m_AddedComponents: []
-  m_SourcePrefab: {fileID: 100100000, guid: 1ea94873ca8be5640809c650f0fa4129, type: 3}
 --- !u!1001 &9196060033859379014
 PrefabInstance:
   m_ObjectHideFlags: 0
