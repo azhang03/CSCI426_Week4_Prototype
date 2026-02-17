@@ -867,7 +867,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::Minifantasy.ExposureMeter
   gainRate: 0.13
   gainIncreasePerGlasses: 0.01
-  decayRate: 0.1
+  decayRate: 0.7
   visibilityBuffer: 0.35
   stackMultiplier: 1
   barSize: {x: 250, y: 16}
