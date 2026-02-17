@@ -232,6 +232,9 @@ namespace Minifantasy
                 ? vignetteController.GetCurrentVisibleRadius() : 0f;
             Debug.Log($"[Game] Glasses {glassesCollected}/{totalGlasses} — visible radius: {newRadius:F2}");
 
+            if (GlassesNotification.Instance != null)
+                GlassesNotification.Instance.Show(glassesCollected, totalGlasses);
+
             // Play heal animation on the player
             if (playerTransform != null)
             {
