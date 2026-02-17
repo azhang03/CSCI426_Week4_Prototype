@@ -7,6 +7,10 @@ namespace Minifantasy
     /// Renders above all world objects but below UI Canvas.
     /// Self-contained: finds the player and creates its own sprite at runtime.
     /// Only regenerates the texture when glasses are collected (no per-frame cost).
+    ///
+    /// Static overlay: a second sprite using tiled static.jpg instead of black.
+    /// Its alpha is driven by ExposureMeter.Exposure so the vignette visually
+    /// transitions from black to TV static as exposure climbs.
     /// </summary>
     public class VignetteController : MonoBehaviour
     {
@@ -20,6 +24,10 @@ namespace Minifantasy
         [Tooltip("Sorting order (high = renders on top of world).")]
         [SerializeField] private int sortingOrder = 1000;
 
+        [Header("Static Overlay")]
+        [Tooltip("Assign static.jpg here. Must have Read/Write enabled in import settings.")]
+        [SerializeField] private Texture2D staticTexture;
+
         private float currentRadius;
         private Texture2D vignetteTexture;
         private SpriteRenderer spriteRenderer;
@@ -30,9 +38,17 @@ namespace Minifantasy
         private float lastCoverWorldSize;
         private bool needsInitialRebuild;
 
+        // Static overlay
+        private Texture2D staticOverlayTexture;
+        private SpriteRenderer staticSpriteRenderer;
+        private GameObject staticObj;
+        private bool staticEnabled = true;
+        private ExposureMeter exposureMeter;
+
         private void Start()
         {
             currentRadius = startRadius;
+            exposureMeter = FindFirstObjectByType<ExposureMeter>();
             FindPlayer();
             if (playerTransform != null)
                 CreateVignette();
@@ -61,6 +77,8 @@ namespace Minifantasy
                 if (Mathf.Abs(coverWorldSize - lastCoverWorldSize) > 0.1f)
                     RebuildTexture();
             }
+
+            UpdateStaticAlpha();
         }
 
         private float GetCoverWorldSize()
@@ -83,6 +101,15 @@ namespace Minifantasy
             isEnabled = enabled;
             if (vignetteObj != null)
                 vignetteObj.SetActive(enabled);
+            if (staticObj != null)
+                staticObj.SetActive(enabled && staticEnabled);
+        }
+
+        public void SetStaticEnabled(bool enabled)
+        {
+            staticEnabled = enabled;
+            if (staticObj != null)
+                staticObj.SetActive(isEnabled && staticEnabled);
         }
 
         public float GetCurrentVisibleRadius()
@@ -120,6 +147,19 @@ namespace Minifantasy
             spriteRenderer.sortingOrder = sortingOrder;
             spriteRenderer.enabled = isEnabled;
 
+            // Static overlay (same parent, one sorting order higher)
+            if (staticTexture != null)
+            {
+                staticObj = new GameObject("StaticOverlay");
+                staticObj.transform.SetParent(playerTransform, false);
+                staticObj.transform.localPosition = Vector3.zero;
+
+                staticSpriteRenderer = staticObj.AddComponent<SpriteRenderer>();
+                staticSpriteRenderer.sortingOrder = sortingOrder + 1;
+                staticSpriteRenderer.color = new Color(1f, 1f, 1f, 0f);
+                staticObj.SetActive(isEnabled && staticEnabled);
+            }
+
             needsInitialRebuild = true;
         }
 
@@ -132,6 +172,20 @@ namespace Minifantasy
             float camWidth = camHeight * cam.aspect;
             float coverSize = Mathf.Max(camHeight, camWidth) * 6f;
             vignetteObj.transform.localScale = Vector3.one * coverSize;
+
+            if (staticObj != null)
+                staticObj.transform.localScale = Vector3.one * coverSize;
+        }
+
+        private void UpdateStaticAlpha()
+        {
+            if (staticSpriteRenderer == null) return;
+
+            if (exposureMeter == null)
+                exposureMeter = FindFirstObjectByType<ExposureMeter>();
+
+            float exposure = exposureMeter != null ? exposureMeter.Exposure : 0f;
+            staticSpriteRenderer.color = new Color(1f, 1f, 1f, exposure);
         }
 
         private void RebuildTexture()
@@ -150,6 +204,33 @@ namespace Minifantasy
             float innerRadPx = (currentRadius / coverWorldSize) * texSize;
             float edgeSoftness = Mathf.Max(texSize * 0.01f, innerRadPx * 0.3f);
 
+            // Read static texture pixels once for tiling (if available)
+            Color[] staticPixels = null;
+            int staticW = 0, staticH = 0;
+            bool hasStatic = staticTexture != null;
+            if (hasStatic)
+            {
+                try
+                {
+                    staticPixels = staticTexture.GetPixels();
+                    staticW = staticTexture.width;
+                    staticH = staticTexture.height;
+                }
+                catch
+                {
+                    Debug.LogWarning("VignetteController: static.jpg must have Read/Write enabled in import settings.");
+                    hasStatic = false;
+                }
+            }
+
+            // Allocate static overlay texture if needed
+            if (hasStatic && staticOverlayTexture == null)
+            {
+                staticOverlayTexture = new Texture2D(texSize, texSize, TextureFormat.RGBA32, false);
+                staticOverlayTexture.filterMode = FilterMode.Bilinear;
+                staticOverlayTexture.wrapMode = TextureWrapMode.Clamp;
+            }
+
             for (int y = 0; y < texSize; y++)
             {
                 for (int x = 0; x < texSize; x++)
@@ -165,6 +246,15 @@ namespace Minifantasy
                         alpha = 1f;
 
                     vignetteTexture.SetPixel(x, y, new Color(0f, 0f, 0f, alpha));
+
+                    // Build static overlay with same hole shape but tiled static pixels
+                    if (hasStatic)
+                    {
+                        int sx = x % staticW;
+                        int sy = y % staticH;
+                        Color sc = staticPixels[sy * staticW + sx];
+                        staticOverlayTexture.SetPixel(x, y, new Color(sc.r, sc.g, sc.b, alpha));
+                    }
                 }
             }
 
@@ -178,6 +268,21 @@ namespace Minifantasy
                     new Vector2(0.5f, 0.5f),
                     texSize
                 );
+            }
+
+            if (hasStatic)
+            {
+                staticOverlayTexture.Apply();
+
+                if (staticSpriteRenderer != null)
+                {
+                    staticSpriteRenderer.sprite = Sprite.Create(
+                        staticOverlayTexture,
+                        new Rect(0, 0, texSize, texSize),
+                        new Vector2(0.5f, 0.5f),
+                        texSize
+                    );
+                }
             }
         }
     }

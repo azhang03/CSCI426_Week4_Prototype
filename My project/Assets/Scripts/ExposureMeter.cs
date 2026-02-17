@@ -48,8 +48,17 @@ namespace Minifantasy
         private RectTransform fillRect;
         private Image fillImage;
         private float barInnerWidth;
+        private bool barVisible = false;
 
         public float Exposure => exposure;
+
+        /// <summary>Show or hide the exposure UI bar (used by PauseMenu toggle).</summary>
+        public void SetBarVisible(bool visible)
+        {
+            barVisible = visible;
+            if (!visible && canvasGroup != null)
+                canvasGroup.alpha = 0f;
+        }
 
         /* ---------- lifecycle ---------- */
 
@@ -199,7 +208,7 @@ namespace Minifantasy
 
         private void RefreshUI()
         {
-            if (fillRect == null) return;
+            if (fillRect == null || !barVisible) return;
 
             // Width tracks exposure 0→1
             fillRect.sizeDelta = new Vector2(barInnerWidth * exposure, -4f);

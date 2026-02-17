@@ -20,10 +20,12 @@ namespace Minifantasy
         private GameObject pauseMenuRoot;
         private bool isPaused = false;
         private VignetteController vignetteController;
+        private ExposureMeter exposureMeter;
 
         void Start()
         {
             vignetteController = FindFirstObjectByType<VignetteController>();
+            exposureMeter = FindFirstObjectByType<ExposureMeter>();
             FindOrCreateCanvas();
             CreateUI();
             pauseMenuRoot.SetActive(false);
@@ -142,6 +144,9 @@ namespace Minifantasy
             // Vignette toggle
             CreateVignetteToggle(centerPanel.transform);
 
+            // Exposure Bar toggle
+            CreateExposureBarToggle(centerPanel.transform);
+
             // Spacer
             CreateSpacer(centerPanel.transform, 10);
 
@@ -215,6 +220,69 @@ namespace Minifantasy
                 vignetteController.SetVignetteEnabled(isOn);
             else
                 Debug.LogWarning("PauseMenu: Could not find VignetteController in scene.");
+        }
+
+        void CreateExposureBarToggle(Transform parent)
+        {
+            GameObject toggleObj = new GameObject("ExposureBarToggle");
+            toggleObj.transform.SetParent(parent, false);
+
+            RectTransform rt = toggleObj.AddComponent<RectTransform>();
+            rt.sizeDelta = new Vector2(300, 36);
+
+            HorizontalLayoutGroup hlg = toggleObj.AddComponent<HorizontalLayoutGroup>();
+            hlg.spacing = 12;
+            hlg.childAlignment = TextAnchor.MiddleCenter;
+            hlg.childControlWidth = false;
+            hlg.childControlHeight = false;
+            hlg.childForceExpandWidth = false;
+            hlg.childForceExpandHeight = false;
+
+            GameObject boxBg = CreateUIRect(toggleObj.transform, "Background", new Vector2(28, 28), new Color(0.25f, 0.25f, 0.25f, 1f));
+
+            GameObject checkmark = new GameObject("Checkmark");
+            checkmark.transform.SetParent(boxBg.transform, false);
+
+            RectTransform checkRT = checkmark.AddComponent<RectTransform>();
+            checkRT.anchorMin = new Vector2(0.15f, 0.15f);
+            checkRT.anchorMax = new Vector2(0.85f, 0.85f);
+            checkRT.offsetMin = Vector2.zero;
+            checkRT.offsetMax = Vector2.zero;
+
+            Image checkImg = checkmark.AddComponent<Image>();
+            checkImg.color = toggleColor;
+
+            GameObject labelObj = new GameObject("Label");
+            labelObj.transform.SetParent(toggleObj.transform, false);
+
+            RectTransform labelRT = labelObj.AddComponent<RectTransform>();
+            labelRT.sizeDelta = new Vector2(180, 36);
+
+            Text label = labelObj.AddComponent<Text>();
+            label.text = "Exposure Bar";
+            label.font = Resources.GetBuiltinResource<Font>("LegacyRuntime.ttf");
+            label.fontSize = 22;
+            label.color = textColor;
+            label.alignment = TextAnchor.MiddleLeft;
+
+            Toggle toggle = toggleObj.AddComponent<Toggle>();
+            toggle.isOn = false;
+            toggle.graphic = checkImg;
+            toggle.targetGraphic = boxBg.GetComponent<Image>();
+            toggle.onValueChanged.AddListener(OnExposureBarToggled);
+        }
+
+        void OnExposureBarToggled(bool isOn)
+        {
+            if (exposureMeter == null)
+                exposureMeter = FindFirstObjectByType<ExposureMeter>();
+            if (vignetteController == null)
+                vignetteController = FindFirstObjectByType<VignetteController>();
+
+            if (exposureMeter != null)
+                exposureMeter.SetBarVisible(isOn);
+            if (vignetteController != null)
+                vignetteController.SetStaticEnabled(!isOn);
         }
 
         void CreateText(Transform parent, string name, string content, int fontSize, Color color, float height, FontStyle style = FontStyle.Normal)
