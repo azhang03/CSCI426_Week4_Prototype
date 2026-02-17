@@ -2471,7 +2471,9 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::Minifantasy.MapViewer
   mapSprite: {fileID: -7133021098355202002, guid: 17a91b78bdc3e4d4f8fdbaceff242647, type: 3}
   slideSpeed: 5
-  iconMargin: 30
+  iconOffset: {x: 50, y: 50}
+  mapIconSize: 74
+  keySize: 50
 --- !u!4 &500822455
 Transform:
   m_ObjectHideFlags: 0
@@ -25213,7 +25215,7 @@ Transform:
   m_GameObject: {fileID: 1769870790}
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: -10.81, y: -1.83, z: 0}
+  m_LocalPosition: {x: -14.39, y: -3.812, z: 0}
   m_LocalScale: {x: 0.5, y: 0.5, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
