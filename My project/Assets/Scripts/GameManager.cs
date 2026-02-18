@@ -48,6 +48,7 @@ namespace Minifantasy
         private bool firstSpawnDone;
         private int spawnCount;
         private bool gameOver;
+        private float survivalTime;
 
         private Transform playerTransform;
         private Vector2 lastMoveDir = Vector2.up;
@@ -56,6 +57,7 @@ namespace Minifantasy
         public int GlassesCollected => glassesCollected;
         public int TotalGlasses => totalGlasses;
         public bool IsGameOver => gameOver;
+        public float SurvivalTime => survivalTime;
 
         private void Awake()
         {
@@ -91,6 +93,7 @@ namespace Minifantasy
 
             if (gameOver) return;
 
+            survivalTime += Time.deltaTime;
             TrackPlayerDirection();
 
             if (!firstSpawnDone)
@@ -132,6 +135,13 @@ namespace Minifantasy
             // 1 = give one pair of glasses
             if (Keyboard.current.digit1Key.wasPressedThisFrame && !gameOver)
                 CollectGlasses();
+
+            // 2 = max out exposure (test lose cutscene)
+            if (Keyboard.current.digit2Key.wasPressedThisFrame && !gameOver)
+            {
+                ExposureMeter meter = FindFirstObjectByType<ExposureMeter>();
+                if (meter != null) meter.ForceMaxExposure();
+            }
         }
 
         /* ---------- player tracking ---------- */
@@ -251,7 +261,12 @@ namespace Minifantasy
             if (gameOver) return;
             gameOver = true;
             Time.timeScale = 0f;
-            if (losePanel != null) losePanel.SetActive(true);
+
+            GameOverScreen screen = FindFirstObjectByType<GameOverScreen>();
+            if (screen != null)
+                screen.ShowLose(survivalTime);
+            else if (losePanel != null)
+                losePanel.SetActive(true);
         }
 
         private void Win()
@@ -259,7 +274,12 @@ namespace Minifantasy
             if (gameOver) return;
             gameOver = true;
             Time.timeScale = 0f;
-            if (winPanel != null) winPanel.SetActive(true);
+
+            GameOverScreen screen = FindFirstObjectByType<GameOverScreen>();
+            if (screen != null)
+                screen.ShowWin(survivalTime);
+            else if (winPanel != null)
+                winPanel.SetActive(true);
         }
 
         public void RestartGame()

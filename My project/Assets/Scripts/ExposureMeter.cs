@@ -52,6 +52,9 @@ namespace Minifantasy
 
         public float Exposure => exposure;
 
+        /// <summary>Debug helper: instantly maxes out exposure (triggers lose on next frame).</summary>
+        public void ForceMaxExposure() { exposure = 1f; }
+
         /// <summary>Show or hide the exposure UI bar (used by PauseMenu toggle).</summary>
         public void SetBarVisible(bool visible)
         {

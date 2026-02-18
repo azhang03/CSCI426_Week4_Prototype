@@ -865,9 +865,9 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: e88c6ccefded22446a5ef7ee1eee9d3b, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::Minifantasy.ExposureMeter
-  gainRate: 0.13
-  gainIncreasePerGlasses: 0.01
-  decayRate: 0.7
+  gainRate: 0.14
+  gainIncreasePerGlasses: 0.02
+  decayRate: 0.1
   visibilityBuffer: 0.35
   stackMultiplier: 1
   barSize: {x: 250, y: 16}
@@ -2469,7 +2469,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: a9fc741d26b31684fa0ba84ee3de191d, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::Minifantasy.MapViewer
-  mapSprite: {fileID: -7133021098355202002, guid: 17a91b78bdc3e4d4f8fdbaceff242647, type: 3}
+  mapSprite: {fileID: 3724026536888310782, guid: 41e61626672a5514fb16763e5652bdcb, type: 3}
   slideSpeed: 5
   iconOffset: {x: 50, y: 50}
   mapIconSize: 74
@@ -3537,6 +3537,7 @@ GameObject:
   m_Component:
   - component: {fileID: 743248480}
   - component: {fileID: 743248479}
+  - component: {fileID: 743248481}
   m_Layer: 0
   m_Name: GameManager
   m_TagString: Untagged
@@ -3587,6 +3588,25 @@ Transform:
   m_Children: []
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &743248481
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 743248478}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 1b8830f8bd2c0224dbecd529ef4eb593, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::Minifantasy.GameOverScreen
+  cutsceneImage: {fileID: -746422520211797275, guid: 90015f6b70f6365449a0cf3654651aee, type: 3}
+  cutsceneSound: {fileID: 8300000, guid: 1cfa1497b99df014c9707b451f0ab937, type: 3}
+  soundVolume: 0.8
+  cutsceneDuration: 0
+  shakeIntensity: 25
+  panelColor: {r: 0.15, g: 0.15, b: 0.15, a: 0.95}
+  buttonColor: {r: 0.2, g: 0.6, b: 0.9, a: 1}
 --- !u!4 &755871957 stripped
 Transform:
   m_CorrespondingSourceObject: {fileID: 3347543616739314970, guid: d16432bc131ab054ca5708ca89421b5b, type: 3}
@@ -25279,6 +25299,55 @@ Animator:
   m_AllowConstantClipSamplingOptimization: 1
   m_KeepAnimatorStateOnDisable: 0
   m_WriteDefaultValuesOnDisable: 0
+--- !u!1 &1783948026
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 1783948028}
+  - component: {fileID: 1783948027}
+  m_Layer: 0
+  m_Name: GlassesNotification
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!114 &1783948027
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1783948026}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: ff3c21f6ef7ca9e4da25bac59b4adcd1, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::Minifantasy.GlassesNotification
+  fadeInDuration: 0.4
+  holdDuration: 1.5
+  fadeOutDuration: 0.6
+  topMargin: 60
+  fontSize: 32
+--- !u!4 &1783948028
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1783948026}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: -1.84371, y: 6.14261, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 0}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &1785326233
 GameObject:
   m_ObjectHideFlags: 0
@@ -27564,3 +27633,4 @@ SceneRoots:
   - {fileID: 319127232}
   - {fileID: 1410351412}
   - {fileID: 500822455}
+  - {fileID: 1783948028}
