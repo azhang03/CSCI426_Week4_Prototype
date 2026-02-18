@@ -120,7 +120,7 @@ namespace Minifantasy
             panelRect.anchorMin = new Vector2(0.5f, 0.5f);
             panelRect.anchorMax = new Vector2(0.5f, 0.5f);
             panelRect.pivot = new Vector2(0.5f, 0.5f);
-            panelRect.sizeDelta = new Vector2(500, 350);
+            panelRect.sizeDelta = new Vector2(500, 480);
 
             Image panelImage = centerPanel.AddComponent<Image>();
             panelImage.color = panelColor;
@@ -146,6 +146,9 @@ namespace Minifantasy
 
             // Exposure Bar toggle
             CreateExposureBarToggle(centerPanel.transform);
+
+            // Master Volume slider
+            CreateVolumeSlider(centerPanel.transform);
 
             // Spacer
             CreateSpacer(centerPanel.transform, 10);
@@ -283,6 +286,111 @@ namespace Minifantasy
                 exposureMeter.SetBarVisible(isOn);
             if (vignetteController != null)
                 vignetteController.SetStaticEnabled(!isOn);
+        }
+
+        void CreateVolumeSlider(Transform parent)
+        {
+            GameObject row = new GameObject("VolumeRow");
+            row.transform.SetParent(parent, false);
+
+            RectTransform rowRT = row.AddComponent<RectTransform>();
+            rowRT.sizeDelta = new Vector2(300, 36);
+
+            HorizontalLayoutGroup hlg = row.AddComponent<HorizontalLayoutGroup>();
+            hlg.spacing = 12;
+            hlg.childAlignment = TextAnchor.MiddleCenter;
+            hlg.childControlWidth = false;
+            hlg.childControlHeight = false;
+            hlg.childForceExpandWidth = false;
+            hlg.childForceExpandHeight = false;
+
+            // Label
+            GameObject labelObj = new GameObject("Label");
+            labelObj.transform.SetParent(row.transform, false);
+
+            RectTransform labelRT = labelObj.AddComponent<RectTransform>();
+            labelRT.sizeDelta = new Vector2(100, 36);
+
+            Text label = labelObj.AddComponent<Text>();
+            label.text = "Volume";
+            label.font = Resources.GetBuiltinResource<Font>("LegacyRuntime.ttf");
+            label.fontSize = 22;
+            label.color = textColor;
+            label.alignment = TextAnchor.MiddleLeft;
+
+            // Slider
+            GameObject sliderObj = new GameObject("VolumeSlider");
+            sliderObj.transform.SetParent(row.transform, false);
+
+            RectTransform sliderRT = sliderObj.AddComponent<RectTransform>();
+            sliderRT.sizeDelta = new Vector2(180, 20);
+
+            Slider slider = sliderObj.AddComponent<Slider>();
+            slider.minValue = 0f;
+            slider.maxValue = 1f;
+            slider.value = AudioListener.volume;
+
+            // Background track
+            GameObject bgTrack = new GameObject("Background");
+            bgTrack.transform.SetParent(sliderObj.transform, false);
+
+            RectTransform bgRT = bgTrack.AddComponent<RectTransform>();
+            bgRT.anchorMin = new Vector2(0f, 0.25f);
+            bgRT.anchorMax = new Vector2(1f, 0.75f);
+            bgRT.sizeDelta = Vector2.zero;
+
+            Image bgImg = bgTrack.AddComponent<Image>();
+            bgImg.color = new Color(0.25f, 0.25f, 0.25f, 1f);
+
+            // Fill area
+            GameObject fillArea = new GameObject("FillArea");
+            fillArea.transform.SetParent(sliderObj.transform, false);
+
+            RectTransform fillAreaRT = fillArea.AddComponent<RectTransform>();
+            fillAreaRT.anchorMin = new Vector2(0f, 0.25f);
+            fillAreaRT.anchorMax = new Vector2(1f, 0.75f);
+            fillAreaRT.sizeDelta = Vector2.zero;
+
+            GameObject fill = new GameObject("Fill");
+            fill.transform.SetParent(fillArea.transform, false);
+
+            RectTransform fillRT = fill.AddComponent<RectTransform>();
+            fillRT.anchorMin = Vector2.zero;
+            fillRT.anchorMax = Vector2.one;
+            fillRT.sizeDelta = Vector2.zero;
+
+            Image fillImg = fill.AddComponent<Image>();
+            fillImg.color = toggleColor;
+
+            slider.fillRect = fillRT;
+
+            // Handle slide area
+            GameObject handleArea = new GameObject("HandleSlideArea");
+            handleArea.transform.SetParent(sliderObj.transform, false);
+
+            RectTransform handleAreaRT = handleArea.AddComponent<RectTransform>();
+            handleAreaRT.anchorMin = Vector2.zero;
+            handleAreaRT.anchorMax = Vector2.one;
+            handleAreaRT.sizeDelta = Vector2.zero;
+
+            GameObject handle = new GameObject("Handle");
+            handle.transform.SetParent(handleArea.transform, false);
+
+            RectTransform handleRT = handle.AddComponent<RectTransform>();
+            handleRT.sizeDelta = new Vector2(16, 24);
+
+            Image handleImg = handle.AddComponent<Image>();
+            handleImg.color = Color.white;
+
+            slider.targetGraphic = handleImg;
+            slider.handleRect = handleRT;
+
+            slider.onValueChanged.AddListener(OnVolumeChanged);
+        }
+
+        void OnVolumeChanged(float value)
+        {
+            AudioListener.volume = value;
         }
 
         void CreateText(Transform parent, string name, string content, int fontSize, Color color, float height, FontStyle style = FontStyle.Normal)

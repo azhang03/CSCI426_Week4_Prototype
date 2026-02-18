@@ -155,7 +155,7 @@ namespace Minifantasy
             panelRect.anchorMin = new Vector2(0.5f, 0.5f);
             panelRect.anchorMax = new Vector2(0.5f, 0.5f);
             panelRect.pivot = new Vector2(0.5f, 0.5f);
-            panelRect.sizeDelta = new Vector2(520, 300);
+            panelRect.sizeDelta = new Vector2(520, 350);
 
             Image panelImg = panel.AddComponent<Image>();
             panelImg.color = panelColor;
@@ -170,23 +170,27 @@ namespace Minifantasy
             vlg.childForceExpandWidth = true;
             vlg.childForceExpandHeight = false;
 
+            Color goldColor = new Color(1f, 0.84f, 0f, 1f);
+
             if (isLose)
             {
                 CreateText(panel.transform, "Title", "RENDERED!", 42,
                     new Color(0.9f, 0.15f, 0.15f, 1f), 55, FontStyle.Bold);
-                CreateSpacer(panel.transform, 6);
-                CreateText(panel.transform, "Time",
-                    $"You survived {FormatTime(displayTime)}",
-                    24, Color.white, 35);
+                CreateSpacer(panel.transform, 4);
+                CreateText(panel.transform, "Subtitle", "You survived", 24,
+                    Color.white, 30);
+                CreateText(panel.transform, "Time", FormatTime(displayTime), 32,
+                    goldColor, 40, FontStyle.Bold);
             }
             else
             {
                 CreateText(panel.transform, "Title", "You did it!", 42,
-                    Color.white, 55, FontStyle.Bold);
-                CreateSpacer(panel.transform, 6);
-                CreateText(panel.transform, "Time",
-                    $"You collected the glasses in: {FormatTime(displayTime)}",
-                    24, Color.white, 35);
+                    new Color(0.2f, 0.9f, 0.3f, 1f), 55, FontStyle.Bold);
+                CreateSpacer(panel.transform, 4);
+                CreateText(panel.transform, "Subtitle",
+                    "You collected the glasses in:", 24, Color.white, 30);
+                CreateText(panel.transform, "Time", FormatTime(displayTime), 32,
+                    goldColor, 40, FontStyle.Bold);
             }
 
             CreateSpacer(panel.transform, 12);
