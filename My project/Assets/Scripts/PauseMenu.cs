@@ -120,7 +120,7 @@ namespace Minifantasy
             panelRect.anchorMin = new Vector2(0.5f, 0.5f);
             panelRect.anchorMax = new Vector2(0.5f, 0.5f);
             panelRect.pivot = new Vector2(0.5f, 0.5f);
-            panelRect.sizeDelta = new Vector2(500, 480);
+            panelRect.sizeDelta = new Vector2(500, 540);
 
             Image panelImage = centerPanel.AddComponent<Image>();
             panelImage.color = panelColor;
@@ -146,6 +146,9 @@ namespace Minifantasy
 
             // Exposure Bar toggle
             CreateExposureBarToggle(centerPanel.transform);
+
+            // Debug Values toggle
+            CreateDebugToggle(centerPanel.transform);
 
             // Master Volume slider
             CreateVolumeSlider(centerPanel.transform);
@@ -286,6 +289,68 @@ namespace Minifantasy
                 exposureMeter.SetBarVisible(isOn);
             if (vignetteController != null)
                 vignetteController.SetStaticEnabled(!isOn);
+        }
+
+        void CreateDebugToggle(Transform parent)
+        {
+            GameObject toggleObj = new GameObject("DebugToggle");
+            toggleObj.transform.SetParent(parent, false);
+
+            RectTransform rt = toggleObj.AddComponent<RectTransform>();
+            rt.sizeDelta = new Vector2(300, 36);
+
+            HorizontalLayoutGroup hlg = toggleObj.AddComponent<HorizontalLayoutGroup>();
+            hlg.spacing = 12;
+            hlg.childAlignment = TextAnchor.MiddleCenter;
+            hlg.childControlWidth = false;
+            hlg.childControlHeight = false;
+            hlg.childForceExpandWidth = false;
+            hlg.childForceExpandHeight = false;
+
+            GameObject boxBg = CreateUIRect(toggleObj.transform, "Background",
+                new Vector2(28, 28), new Color(0.25f, 0.25f, 0.25f, 1f));
+
+            GameObject checkmark = new GameObject("Checkmark");
+            checkmark.transform.SetParent(boxBg.transform, false);
+
+            RectTransform checkRT = checkmark.AddComponent<RectTransform>();
+            checkRT.anchorMin = new Vector2(0.15f, 0.15f);
+            checkRT.anchorMax = new Vector2(0.85f, 0.85f);
+            checkRT.offsetMin = Vector2.zero;
+            checkRT.offsetMax = Vector2.zero;
+
+            Image checkImg = checkmark.AddComponent<Image>();
+            checkImg.color = toggleColor;
+
+            GameObject labelObj = new GameObject("Label");
+            labelObj.transform.SetParent(toggleObj.transform, false);
+
+            RectTransform labelRT = labelObj.AddComponent<RectTransform>();
+            labelRT.sizeDelta = new Vector2(180, 36);
+
+            Text label = labelObj.AddComponent<Text>();
+            label.text = "Debug Values";
+            label.font = Resources.GetBuiltinResource<Font>("LegacyRuntime.ttf");
+            label.fontSize = 22;
+            label.color = textColor;
+            label.alignment = TextAnchor.MiddleLeft;
+
+            Toggle toggle = toggleObj.AddComponent<Toggle>();
+            toggle.isOn = false;
+            toggle.graphic = checkImg;
+            toggle.targetGraphic = boxBg.GetComponent<Image>();
+            toggle.onValueChanged.AddListener(OnDebugToggled);
+        }
+
+        void OnDebugToggled(bool isOn)
+        {
+            DebugOverlay overlay = DebugOverlay.Instance;
+            if (overlay == null)
+            {
+                GameObject obj = new GameObject("DebugOverlay");
+                overlay = obj.AddComponent<DebugOverlay>();
+            }
+            overlay.SetVisible(isOn);
         }
 
         void CreateVolumeSlider(Transform parent)

@@ -233,6 +233,14 @@ namespace Minifantasy
             if (gameOver) return;
 
             glassesCollected++;
+
+            if (AudioManager.Instance != null)
+            {
+                AudioManager.Instance.PlayGlassesChime();
+                if (glassesCollected == 4)
+                    AudioManager.Instance.OnFourthGlassesCollected();
+            }
+
             UpdateUI();
 
             if (vignetteController != null)

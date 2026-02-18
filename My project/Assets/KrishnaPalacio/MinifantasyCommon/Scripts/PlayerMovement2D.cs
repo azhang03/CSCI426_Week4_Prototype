@@ -38,6 +38,8 @@ namespace Minifantasy
         public float MaxStamina => maxStamina;
         public bool IsSprinting => isSprinting;
         public bool IsMoving => moveInput.sqrMagnitude > 0.01f;
+        public float CurrentDrainRate => Mathf.Lerp(drainRateMax, drainRateMin, currentStamina / maxStamina);
+        public float CurrentRegenRate => Mathf.Lerp(regenRateMin, regenRateMax, currentStamina / maxStamina);
 
         private void Awake()
         {

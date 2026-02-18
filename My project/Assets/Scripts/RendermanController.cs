@@ -25,6 +25,7 @@ namespace Minifantasy
         private Collider2D shapeCollider;
         private float age;
         private bool fading;
+        private bool seenByPlayer;
 
         /* -------- static registry -------- */
 
@@ -38,6 +39,10 @@ namespace Minifantasy
 
         /// <summary>Called by GameManager to set lifetime equal to the current spawn interval.</summary>
         public void SetLifetime(float duration) { lifetime = duration; }
+
+        /// <summary>True once the player has seen this particular spawn (used by AudioManager).</summary>
+        public bool SeenByPlayer => seenByPlayer;
+        public void MarkSeenByPlayer() { seenByPlayer = true; }
 
         /// <summary>
         /// True when any part of the Renderman sprite overlaps the player's vision circle.

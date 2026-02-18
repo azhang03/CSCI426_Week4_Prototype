@@ -55,6 +55,15 @@ namespace Minifantasy
         /// <summary>Debug helper: instantly maxes out exposure (triggers lose on next frame).</summary>
         public void ForceMaxExposure() { exposure = 1f; }
 
+        public float EffectiveGainRate
+        {
+            get
+            {
+                int glasses = GameManager.Instance != null ? GameManager.Instance.GlassesCollected : 0;
+                return gainRate + gainIncreasePerGlasses * glasses;
+            }
+        }
+
         /// <summary>Show or hide the exposure UI bar (used by PauseMenu toggle).</summary>
         public void SetBarVisible(bool visible)
         {
@@ -103,7 +112,15 @@ namespace Minifantasy
                 if (list[i] != null
                     && list[i].IsVisibleToPlayer(playerPos, visionRadius)
                     && list[i].IsOnScreen())
+                {
                     visibleCount++;
+                    if (!list[i].SeenByPlayer)
+                    {
+                        list[i].MarkSeenByPlayer();
+                        if (AudioManager.Instance != null)
+                            AudioManager.Instance.OnRendermanFirstSeen();
+                    }
+                }
             }
 
             if (visibleCount > 0)

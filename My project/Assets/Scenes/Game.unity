@@ -734,11 +734,11 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 4479235377703423165, guid: d16432bc131ab054ca5708ca89421b5b, type: 3}
       propertyPath: m_LocalPosition.x
-      value: -17.07
+      value: -17.01
       objectReference: {fileID: 0}
     - target: {fileID: 4479235377703423165, guid: d16432bc131ab054ca5708ca89421b5b, type: 3}
       propertyPath: m_LocalPosition.y
-      value: -3.48
+      value: -2.32
       objectReference: {fileID: 0}
     - target: {fileID: 7724026711007126765, guid: d16432bc131ab054ca5708ca89421b5b, type: 3}
       propertyPath: m_Sprite
@@ -2579,6 +2579,69 @@ Transform:
   m_CorrespondingSourceObject: {fileID: 3347543616739314970, guid: c4a55705bf4afe6438518d8d6af4e976, type: 3}
   m_PrefabInstance: {fileID: 506939546}
   m_PrefabAsset: {fileID: 0}
+--- !u!1 &507915381
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 507915383}
+  - component: {fileID: 507915382}
+  m_Layer: 0
+  m_Name: AudioManager
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!114 &507915382
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 507915381}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 78ecbba0a9d3a654f82d8b872a59af05, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::Minifantasy.AudioManager
+  forestClip: {fileID: 0}
+  forestVolume: 0.5
+  fourthGlassesClip: {fileID: 8300000, guid: 386d5a31e8eec27499bd9474293c3684, type: 3}
+  fourthGlassesVolume: 0.5
+  ambienceFadeSpeed: 1
+  staticClip: {fileID: 8300000, guid: 94d9ca19f655b804aa0674313fb0f56a, type: 3}
+  staticVolumeBase: 0
+  staticVolumeMax: 0.29
+  staticFadeSpeed: 2
+  walkClip: {fileID: 8300000, guid: be94245cec2cfb549bb7fb679e06d925, type: 3}
+  walkVolume: 0.05
+  waterWalkClip: {fileID: 8300000, guid: 3b64a851f942567498e508fc4f62dc81, type: 3}
+  waterWalkVolume: 0.4
+  glassesChimeClip: {fileID: 8300000, guid: 865a46067c6d98e418ec2efe1b46f061, type: 3}
+  chimeVolume: 0.38
+  rendermanSightClip: {fileID: 8300000, guid: d0e3c6a04b10b594f84d43a765c012e1, type: 3}
+  sightVolume: 0.24
+  mapRuffleClip: {fileID: 8300000, guid: 72c027ea0d983434b86897603f518473, type: 3}
+  mapRuffleVolume: 0.5
+--- !u!4 &507915383
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 507915381}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: -2.84116, y: 2.21718, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 0}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1001 &515449034
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -3538,6 +3601,7 @@ GameObject:
   - component: {fileID: 743248480}
   - component: {fileID: 743248479}
   - component: {fileID: 743248481}
+  - component: {fileID: 743248482}
   m_Layer: 0
   m_Name: GameManager
   m_TagString: Untagged
@@ -3602,11 +3666,24 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::Minifantasy.GameOverScreen
   cutsceneImage: {fileID: -746422520211797275, guid: 90015f6b70f6365449a0cf3654651aee, type: 3}
   cutsceneSound: {fileID: 8300000, guid: 1cfa1497b99df014c9707b451f0ab937, type: 3}
-  soundVolume: 0.8
+  soundVolume: 0.25
   cutsceneDuration: 0
   shakeIntensity: 25
   panelColor: {r: 0.15, g: 0.15, b: 0.15, a: 0.95}
   buttonColor: {r: 0.2, g: 0.6, b: 0.9, a: 1}
+--- !u!114 &743248482
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 743248478}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 16cedc318aaf36f4d9e8038788ade0af, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::Minifantasy.DebugOverlay
+  fontSize: 36
 --- !u!4 &755871957 stripped
 Transform:
   m_CorrespondingSourceObject: {fileID: 3347543616739314970, guid: d16432bc131ab054ca5708ca89421b5b, type: 3}
@@ -24009,11 +24086,11 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 4479235377703423165, guid: d16432bc131ab054ca5708ca89421b5b, type: 3}
       propertyPath: m_LocalPosition.x
-      value: -13.17
+      value: -12.98
       objectReference: {fileID: 0}
     - target: {fileID: 4479235377703423165, guid: d16432bc131ab054ca5708ca89421b5b, type: 3}
       propertyPath: m_LocalPosition.y
-      value: -5.37
+      value: -3.7
       objectReference: {fileID: 0}
     - target: {fileID: 7724026711007126765, guid: d16432bc131ab054ca5708ca89421b5b, type: 3}
       propertyPath: m_Sprite
@@ -27634,3 +27711,4 @@ SceneRoots:
   - {fileID: 1410351412}
   - {fileID: 500822455}
   - {fileID: 1783948028}
+  - {fileID: 507915383}

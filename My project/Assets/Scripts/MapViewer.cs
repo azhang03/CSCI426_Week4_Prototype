@@ -61,6 +61,9 @@ namespace Minifantasy
         {
             mapOpen = !mapOpen;
             mapTargetY = mapOpen ? mapShownY : mapHiddenY;
+
+            if (mapOpen && AudioManager.Instance != null)
+                AudioManager.Instance.PlayMapRuffle();
         }
 
         private void AnimateMap()
